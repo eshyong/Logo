@@ -1,96 +1,183 @@
 <html>
-<canvas id="canvas" width="320" height="640"></canvas>
-<form onSubmit="submitCommand(this)">
+<meta charset="utf-8">
+<canvas id="canvas" width="640" height="640"></canvas>
+<form onSubmit="return submitCommand(this)">
 	<input type="text" id="command"></input>
 	<input type="submit"></input>
 </form>
 <script>
+// global variables (should change this later)
+// color variables for context's fillStyle
 var red = '#FF0000';
 var green = '#00FF00';
 var blue = '#0000FF';
 
-var turtlepos = [160, 320];
+// turtle variables
+var turtlePos = [288, 288];
+var turtleSize = [64, 64];
 var degrees = 90;
 var linesx = [0];
 var linesy = [0];
 
+// temp variable to be used later
 var command;
 
+// canvas stuff
 var canvas = document.getElementById('canvas');
+var origin = [0, 0];
+var canvasWidth = canvas.width;
+var canvasHeight = canvas.height;
 var context = canvas.getContext('2d');
-context.fillStyle = red;
-context.fillRect(turtlepos[0], turtlepos[1], 48, 48);
 
+// draw initial screen
+context.fillStyle = blue;
+context.fillRect(origin[0], origin[1], canvasWidth, canvasHeight);
+context.fillStyle = red;
+context.fillRect(turtlePos[0], turtlePos[1], turtleSize[0], turtleSize[1]);
+
+/* 
+*	interprets commands from the html input form and executes them. 
+*/
 function submitCommand(form) {
+	// warnings for invalid commands
+	var invalidCommandWarning = "Not a valid command. Try:\n \
+					\'forward/fd\' dist: moves turtle forward \'dist\' units (eg. fd 10, forward 10)\n \
+					\'back/bk\' dist: moves turtle backward \'dist\' units (eg. back 10, bk 10)\n \
+					\'left/lft\' deg: rotates turtle \'deg\' units counterclockwise (eg. left 45, lft 45)\n \
+					\'right/rt\' deg: rotates turtle \'deg\' units clockwise (eg. right 45, rt 45)\n \
+					\'clear\': returns turtle to original position";
+	var invalidNumberWarning = "Not a valid number. Please try again.";
+	var emptyCommandWarning = "Hey! You didn't enter anything. Please try again!";
+
+	// get command and parse into tokens
+	// tokens after the 2nd will be ignored
 	command = form.command.value;
 	console.log(command);
 	var words = command.split(" ");
-	var validNumber = true;
+	var validNumber = false;
 	var number;
+
+	// only proceed if a non empty command was submitted
 	if (words.length > 0) {
 		if (words.length > 1) {
 			number = Number(words[1]);
-			if (isNaN(number)) {
-				validNumber = false;
+			if (!isNaN(number) || number !== null) {
+				validNumber = true;
 			}
 		}
+		// big switch statement to handle commands
+		// commands transform the turtle image
 		switch (words[0]) {
 			case "fd":
 			case "forward":
 				if (validNumber) {
 					translateTurtle(true, number);
+				} else {
+					alert(invalidNumberWarning);
 				} break;
 			case "bk":
 			case "back":
 				if (validNumber) {
 					translateTurtle(false, number);
+				} else {
+					alert(invalidNumberWarning);
 				} break;
 			case "left":
 			case "lft":
 				if (validNumber) {
 					rotateTurtle(true, number);
+				} else {
+					alert(invalidNumberWarning);
 				} break;
 			case "right":
 			case "rt":
 				if (validNumber) {
 					rotateTurtle(false, number);
+				} else {
+					alert(invalidNumberWarning);
 				} break;
+			case "clear":
+				turtlePos = [288, 288];
+				degrees = 90;
+				break;
 			default:
-				alert('not a valid command');
+				alert(invalidCommandWarning);
 				break;
 		}
+	} else {
+		alert(emptyCommandWarning);
 	}
+
+	// draw the screen, after turtle is transformed
+	drawScreen(turtlePos[0], turtlePos[1], turtleSize[0], turtleSize[1]);
 	return false;
 }
 
+/*
+*	translates turtle in a straight line, using distance as a parameter
+*/
 function translateTurtle(forward, distance) {
+	// if forward, values are left as is
+	// otherwise the turtle moves -1 times calculated distance
 	var dir = forward ? 1 : -1;
-	console.log("fd: " + forward + " dist: " + distance);
-	if (degrees <= 90) {
-		turtlepos[0] += (dir * distance * Math.cos(degrees * Math.PI/180));
-		console.log("degrees: " + degrees);
-		console.log("cos: " + Math.cos(degrees));
-		turtlepos[1] += (dir * distance * Math.sin(degrees * Math.PI/180));
-		console.log("new (x, y): " + turtlepos[0] + ", " + turtlepos[1]);
-	} else if (degrees <= 180) {
 
-	} else if (degrees <= 270) {
-
-	} else if (degrees <= 360) {
-
+	// the actual x and y offsets depends on the turtle's angle
+	// add y offset if 180 < angle < 360, subtract if 0 < angle < 180
+	if (degrees >= 0 && degrees <= 180) {
+		turtlePos[0] += (dir * distance * Math.cos(degrees * Math.PI / 180));
+		turtlePos[1] -= (dir * distance * Math.sin(degrees * Math.PI / 180));
+	} else if (degrees >= 180 && degrees <= 360) {
+		turtlePos[0] += (dir * distance * Math.cos(degrees * Math.PI / 180));
+		turtlePos[1] += (dir * distance * Math.sin(degrees * Math.PI / 180));
 	}
 }
 
+/* 
+*	rotates turtle by some degree bias
+*/ 
 function rotateTurtle(left, deg) {
+	// counterclockwise is positive, clockwise negative
 	if (left) {
 		degrees += deg;
 	} else {
 		degrees -= deg;
 	}
+
+	// subtract 360 if angle is too high, or add 360 if angle is too low
 	if (degrees > 360) {
 		degrees = degrees - 360;
+	} else if (degrees < -360) {
+		degrees = degrees + 360;
 	}
 	console.log(degrees);
+}
+
+/*
+*	draws screen background and any sprites, including turtle
+*/
+function drawScreen(x, y, width, height) {
+	// get context from canvas
+	// wipe screen for clean draw, then draw background color
+	var ctxt = canvas.getContext('2d');
+	ctxt.clearRect(origin[0], origin[1], canvasWidth, canvasHeight);
+	ctxt.fillStyle = blue;
+	ctxt.fillRect(origin[0], origin[1], canvasWidth, canvasHeight);
+
+	// IMPORTANT
+	// saves canvas' position at (0, 0), or the origin
+	// if this is not called, canvas origin is stuck at turtle's position
+	ctxt.save();
+
+	// moves canvas to position of turtle
+	// rotate and draw are called
+	ctxt.translate(x + width / 2, y + height / 2);
+	ctxt.rotate(degrees * Math.PI / 180);
+	ctxt.translate((-width) / 2, (-height) / 2);
+	ctxt.fillStyle = red;
+	ctxt.fillRect(0, 0, width, height);
+
+	// restores canvas origin to (0, 0)
+	ctxt.restore();
 }
 
 </script>
