@@ -6,21 +6,21 @@
 	<input type="submit"></input>
 </form>
 <script>
-// global variables (should change this later)
 // color variables for context's fillStyle
-var red = '#FF0000';
-var green = '#00FF00';
-var blue = '#0000FF';
+// should probably use less bright colors
+var red = '#FF5555';
+var green = '#22BB22';
+var blue = '#0099FF';
+var black = '#222222';
 
 // turtle variables
+// linesx and linesy are dictionaries for storing points
 var turtlePos = [288, 288];
-var turtleSize = [64, 64];
+var turtleSize = [32, 32];
 var degrees = 90;
-var linesx = [0];
-var linesy = [0];
-
-// temp variable to be used later
-var command;
+var linesx = {};
+var linesy = {};
+var drawing = true;
 
 // canvas stuff
 var canvas = document.getElementById('canvas');
@@ -51,7 +51,7 @@ function submitCommand(form) {
 
 	// get command and parse into tokens
 	// tokens after the 2nd will be ignored
-	command = form.command.value;
+	var command = form.command.value;
 	console.log(command);
 	var words = command.split(" ");
 	var validNumber = false;
@@ -68,37 +68,53 @@ function submitCommand(form) {
 		// big switch statement to handle commands
 		// commands transform the turtle image
 		switch (words[0]) {
-			case "fd":
-			case "forward":
+			case 'fd':
+			case 'forward':
 				if (validNumber) {
 					translateTurtle(true, number);
 				} else {
 					alert(invalidNumberWarning);
 				} break;
-			case "bk":
-			case "back":
+			case 'bk':
+			case 'back':
 				if (validNumber) {
 					translateTurtle(false, number);
 				} else {
 					alert(invalidNumberWarning);
 				} break;
-			case "left":
-			case "lft":
+			case 'left':
+			case 'lft':
 				if (validNumber) {
 					rotateTurtle(true, number);
 				} else {
 					alert(invalidNumberWarning);
 				} break;
-			case "right":
-			case "rt":
+			case 'right':
+			case 'rt':
 				if (validNumber) {
 					rotateTurtle(false, number);
 				} else {
 					alert(invalidNumberWarning);
 				} break;
-			case "clear":
+			case 'pen':
+				if (words[1] === 'up') {
+					drawing = false;
+				} else if (words[1] === 'down') {
+					drawing = true;
+				}
+				break;
+			case 'pd':
+				drawing = true;
+				break;
+			case 'pu':
+				drawing = false;
+				break;
+			case 'clear':
 				turtlePos = [288, 288];
 				degrees = 90;
+				drawing = true;
+				var linesx = {};
+				var linesy = {};
 				break;
 			default:
 				alert(invalidCommandWarning);
@@ -121,6 +137,10 @@ function translateTurtle(forward, distance) {
 	// otherwise the turtle moves -1 times calculated distance
 	var dir = forward ? 1 : -1;
 
+	// store line data
+	var x1 = turtlePos[0];
+	var y1 = turtlePos[1];
+
 	// the actual x and y offsets depends on the turtle's angle
 	// add y offset if 180 < angle < 360, subtract if 0 < angle < 180
 	if (degrees >= 0 && degrees <= 180) {
@@ -130,6 +150,14 @@ function translateTurtle(forward, distance) {
 		turtlePos[0] += (dir * distance * Math.cos(degrees * Math.PI / 180));
 		turtlePos[1] += (dir * distance * Math.sin(degrees * Math.PI / 180));
 	}
+
+	// add line data if drawing
+	if (drawing) {
+		linesx[x1] = turtlePos[0];
+		linesy[y1] = turtlePos[1];
+	}
+	console.log(linesx);
+	console.log(linesy);
 }
 
 /* 
@@ -149,7 +177,6 @@ function rotateTurtle(left, deg) {
 	} else if (degrees < -360) {
 		degrees = degrees + 360;
 	}
-	console.log(degrees);
 }
 
 /*
@@ -164,11 +191,17 @@ function drawScreen(x, y, width, height) {
 	ctxt.fillRect(origin[0], origin[1], canvasWidth, canvasHeight);
 
 	// IMPORTANT
-	// saves canvas' position at (0, 0), or the origin
+	// save canvas position at origin (0, 0)
 	// if this is not called, canvas origin is stuck at turtle's position
 	ctxt.save();
 
-	// moves canvas to position of turtle
+	// if there is more than one point in the lines array, draw lines
+	// move canvas to turtle's initial position then 
+	if (linesx.length > 1) {
+
+	}
+
+	// move canvas to position of turtle
 	// rotate and draw are called
 	ctxt.translate(x + width / 2, y + height / 2);
 	ctxt.rotate(degrees * Math.PI / 180);
@@ -176,7 +209,7 @@ function drawScreen(x, y, width, height) {
 	ctxt.fillStyle = red;
 	ctxt.fillRect(0, 0, width, height);
 
-	// restores canvas origin to (0, 0)
+	// restore canvas origin to (0, 0)
 	ctxt.restore();
 }
 
