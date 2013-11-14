@@ -7,7 +7,6 @@
 </form>
 <script>
 // color variables for context's fillStyle
-// should probably use less bright colors
 var red = '#FF5555';
 var green = '#22BB22';
 var blue = '#0099FF';
@@ -37,6 +36,16 @@ var context = canvas.getContext('2d');
 // draw initial screen
 drawScreen(turtlePos[0], turtlePos[1], turtleSize, turtleSize);
 
+var welcomeMessage = "Welcome to the world of Logo! Try one of these commands to move the turtle and draw:\n\
+		\'forward/fd\' dist: moves turtle forward \'dist\' units (eg. fd 10, forward 10)\n\
+		\'back/bk\' dist: moves turtle backward \'dist\' units (eg. back 10, bk 10)\n\
+		\'left/lft\' deg: rotates turtle \'deg\' units counterclockwise (eg. left 45, lft 45)\n\
+		\'right/rt\' deg: rotates turtle \'deg\' units clockwise (eg. right 45, rt 45)\n\
+		\'pen up/pu\': turns off drawing (you can still move)\n\
+		\'pen down/pd\': turns on drawing\n\
+		\'clear\': clears drawing and returns turtle to original position";
+alert(welcomeMessage);
+
 /* 
 *	interprets commands from the html input form and executes them. 
 */
@@ -47,7 +56,9 @@ function submitCommand(form) {
 					\'back/bk\' dist: moves turtle backward \'dist\' units (eg. back 10, bk 10)\n \
 					\'left/lft\' deg: rotates turtle \'deg\' units counterclockwise (eg. left 45, lft 45)\n \
 					\'right/rt\' deg: rotates turtle \'deg\' units clockwise (eg. right 45, rt 45)\n \
-					\'clear\': returns turtle to original position";
+					\'pen up/pu\': turns off drawing (you can still move)\n\
+					\'pen down/pd\': turns on drawing\n\
+					\'clear\': clears drawing and returns turtle to original position";
 	var invalidNumberWarning = "Not a valid number. Please try again.";
 	var emptyCommandWarning = "Hey! You didn't enter anything. Please try again!";
 
@@ -55,7 +66,7 @@ function submitCommand(form) {
 	// tokens after the 2nd will be ignored
 	var command = form.command.value;
 	console.log(command);
-	var words = command.split(" ");
+	var words = command.split(' ');
 	var validNumber = false;
 	var number;
 
@@ -103,6 +114,8 @@ function submitCommand(form) {
 					drawing = false;
 				} else if (words[1] === 'down') {
 					drawing = true;
+					linesx[linesx.length] = [turtlePos[0] + turtleSize / 2];
+					linesy[linesy.length] = [turtlePos[1] + turtleSize / 2];
 				}
 				break;
 			case 'pd':
@@ -139,8 +152,7 @@ function submitCommand(form) {
 *	translates turtle in a straight line, using distance as a parameter
 */
 function translateTurtle(forward, distance) {
-	// if forward, values are left as is
-	// otherwise the turtle moves -1 times calculated distance
+	// forward: 1, backward: -1
 	var dir = forward ? 1 : -1;
 
 	// index variables to add new line data
@@ -159,7 +171,7 @@ function translateTurtle(forward, distance) {
 }
 
 /* 
-*	rotates turtle by some degree bias
+*	rotates turtle by some degrees
 */ 
 function rotateTurtle(left, deg) {
 	// counterclockwise is positive, clockwise negative
@@ -181,8 +193,7 @@ function rotateTurtle(left, deg) {
 *	draws screen background and any sprites, including turtle
 */
 function drawScreen(x, y, width, height) {
-	// get context from canvas
-	// wipe screen for clean draw, then draw background color
+	// get context from canvas and save context
 	var context = canvas.getContext('2d');
 	context.save();
 
@@ -192,7 +203,6 @@ function drawScreen(x, y, width, height) {
 	context.fillRect(origin[0], origin[1], canvasWidth, canvasHeight);
 
 	// if there is more than one point in the lines array, draw lines
-	// move canvas to turtle's initial position then begin
 	context.fillStyle = black;
 	for (var i = 0; i < linesx.length; i++) {
 		context.moveTo(linesx[i][0], linesy[i][0]);
@@ -206,15 +216,14 @@ function drawScreen(x, y, width, height) {
 	}
 	context.moveTo(0, 0);
 
-	// move canvas to position of turtle
-	// rotate and draw are called
+	// draw turtle
 	context.translate(x + width / 2, y + height / 2);
 	context.rotate((90 - degrees) * Math.PI / 180);
 	context.translate((-width) / 2, (-height) / 2);
 	context.fillStyle = red;
 	context.fillRect(0, 0, width, height);
 
-	// return canvas to original position
+	// return canvas to original context
 	context.restore();
 }
 
