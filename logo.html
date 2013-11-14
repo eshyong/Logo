@@ -7,17 +7,27 @@
 </form>
 <script>
 // color variables for context's fillStyle
-var red = '#FF5555';
-var green = '#22BB22';
-var blue = '#0099FF';
-var black = '#222222';
+const red = '#FF5555';
+const green = '#22BB22';
+const blue = '#0099FF';
+const black = '#222222';
+
+// canvas stuff
+var canvas = document.getElementById('canvas');
+var origin = [0, 0];
+var canvasWidth = canvas.width;
+var canvasHeight = canvas.height;
+var context = canvas.getContext('2d');
+
+const turtleSize = 32;
+const initAngle = 90;
+const initPos = [canvasWidth / 2 - turtleSize, canvasHeight / 2 - turtleSize];
 
 // turtle variables
 // linesx and linesy are arrays of arrays for storing drawings
 // each time pen down is called, a new drawing is initialized
-var turtlePos = [288, 288];
-var turtleSize = 32;
-var degrees = 90;
+var turtlePos = initPos;
+var degrees = initAngle;
 var linesx = [];
 var linesy = [];
 var drawing = true;
@@ -26,12 +36,6 @@ var drawing = true;
 linesx[0] = [turtlePos[0] + turtleSize / 2];
 linesy[0] = [turtlePos[1] + turtleSize / 2];
 
-// canvas stuff
-var canvas = document.getElementById('canvas');
-var origin = [0, 0];
-var canvasWidth = canvas.width;
-var canvasHeight = canvas.height;
-var context = canvas.getContext('2d');
 
 // draw initial screen
 drawScreen(turtlePos[0], turtlePos[1], turtleSize, turtleSize);
@@ -43,6 +47,7 @@ var welcomeMessage = "Welcome to the world of Logo! Try one of these commands to
 		\'right/rt\' deg: rotates turtle \'deg\' units clockwise (eg. right 45, rt 45)\n\
 		\'pen up/pu\': turns off drawing (you can still move)\n\
 		\'pen down/pd\': turns on drawing\n\
+		\'center\': restores turtle to original orientation without clearing drawings\n\
 		\'clear\': clears drawing and returns turtle to original position";
 alert(welcomeMessage);
 
@@ -58,6 +63,7 @@ function submitCommand(form) {
 					\'right/rt\' deg: rotates turtle \'deg\' units clockwise (eg. right 45, rt 45)\n \
 					\'pen up/pu\': turns off drawing (you can still move)\n\
 					\'pen down/pd\': turns on drawing\n\
+					\'center\': restores turtle to original orientation without clearing drawings\n\
 					\'clear\': clears drawing and returns turtle to original position";
 	var invalidNumberWarning = "Not a valid number. Please try again.";
 	var emptyCommandWarning = "Hey! You didn't enter anything. Please try again!";
@@ -126,9 +132,15 @@ function submitCommand(form) {
 			case 'pu':
 				drawing = false;
 				break;
+			case 'center':
+				turtlePos = initPos;
+				degrees = initAngle;
+				linesx[linesx.length] = [turtlePos[0] + turtleSize / 2];
+				linesy[linesy.length] = [turtlePos[1] + turtleSize / 2];
+				break;
 			case 'clear':
-				turtlePos = [288, 288];
-				degrees = 90;
+				turtlePos = initPos;
+				degrees = initAngle;
 				drawing = true;
 				linesx = [];
 				linesy = [];
