@@ -121,8 +121,7 @@ function submitCommand(form) {
 					drawing = true;
 					linesx[linesx.length] = [turtlePos[0] + turtleSize / 2];
 					linesy[linesy.length] = [turtlePos[1] + turtleSize / 2];
-				}
-				break;
+				} break;
 			case 'pd':
 				drawing = true;
 				linesx[linesx.length] = [turtlePos[0] + turtleSize / 2];
@@ -218,11 +217,10 @@ function drawScreen(x, y, width, height) {
 	for (var i = 0; i < linesx.length; i++) {
 		context.moveTo(linesx[i][0], linesy[i][0]);
 		for (var j = 0; j < linesx[i].length; j++) {
-			if (j === 0) {
-				continue;
+			if (j !== 0) {
+				context.lineTo(linesx[i][j], linesy[i][j]);
+				context.stroke();
 			}
-			context.lineTo(linesx[i][j], linesy[i][j]);
-			context.stroke();
 		}
 	}
 	context.moveTo(0, 0);
